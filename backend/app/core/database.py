@@ -23,7 +23,7 @@ elif settings.DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1),
     connect_args=connect_args,
     pool_pre_ping=True,
     pool_recycle=300,
