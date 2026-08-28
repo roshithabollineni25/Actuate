@@ -491,8 +491,14 @@ class RouteIntelligenceAgent:
             "distance": f"{selected['distance_km']} km",
             "eta_minutes": selected["duration_minutes"],
             "ETA": f"{selected['duration_minutes']} mins",
-            "route_polyline": selected["geometry"],
-            "route": selected["geometry"],
+            "route_polyline": [
+    [coord[1], coord[0]]
+    for coord in selected["geometry"]
+],
+"route": [
+    [coord[1], coord[0]]
+    for coord in selected["geometry"]
+],
             "turn_by_turn": selected["steps"],
             "hazards_considered": len(hazards),
             "hazard_avoidance_enabled": avoid_hazards,
