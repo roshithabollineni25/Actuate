@@ -31,24 +31,70 @@ interface RescueMapProps {
   hazards?: RoadHazardProp[];
 }
 
-const incidentIcon = new L.Icon({
+// Fix default Leaflet marker icon paths broken in Vite bundler environments
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
+L.Icon.Default.mergeOptions({
   iconUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+const incidentIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const teamIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
 function FitBounds({ points }: { points: Coordinate[] }) {
   const map = useMap();
 
-  if (points.length > 1) {
-    map.fitBounds(points, {
-      padding: [40, 40],
-    });
-  }
+  React.useEffect(() => {
+    if (!map || !points || points.length === 0) return;
+
+    const validPoints = points.filter(
+      (p) =>
+        Array.isArray(p) &&
+        p.length >= 2 &&
+        typeof p[0] === "number" &&
+        typeof p[1] === "number" &&
+        !isNaN(p[0]) &&
+        !isNaN(p[1])
+    );
+
+    if (validPoints.length === 0) return;
+
+    map.invalidateSize();
+
+    if (validPoints.length === 1) {
+      map.setView(validPoints[0], 15);
+    } else {
+      const bounds = L.latLngBounds(validPoints);
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, {
+          padding: [40, 40],
+        });
+      }
+    }
+  }, [map, JSON.stringify(points)]);
 
   return null;
 }
@@ -184,7 +230,7 @@ export default function RescueMap({
 
         {/* Team Location */}
         {teamLocation && (
-          <Marker position={teamLocation}>
+          <Marker position={teamLocation} icon={teamIcon}>
             <Popup>
               <strong>Rescue Team</strong>
               <br />
